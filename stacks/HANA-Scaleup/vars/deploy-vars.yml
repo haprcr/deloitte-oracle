@@ -1,0 +1,80 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sap_project_id: sap-iac-test
+sap_source_image_family: oracle-linux-9
+sap_source_image_project: oracle-linux-cloud
+sap_oracle_subnetwork: db-central 
+sap_tf_state_bucket: sap-terraform-state-bg-mj
+sap_tf_state_bucket_prefix: linux-oracle-1
+sap_zone: us-central1-a
+
+sap_oracle_instance_name: usgcpora1 
+sap_oracle_instance_ip: 10.5.0.69
+sap_oracle_instance_type: c4-highmem-4 
+sap_oracle_service_account_email: 811811474621-compute@developer.gserviceaccount.com
+sap_oracle_sid: SPD 
+
+sap_oracle_autodelete_boot_disk: true
+fqdn_name: "us.deloitte.com"
+
+sap_oracle_boot_disk_size: 100
+sap_oracle_boot_disk_type: hyperdisk-balanced 
+
+sap_usrsap_disk_size: 50
+sap_usrsap_disk_type: hyperdisk-balanced
+
+sap_sapmnt_disk_size: 50
+sap_sapmnt_disk_type: hyperdisk-balanced
+
+sap_oracle_disk_size: 50
+sap_oracle_disk_type: hyperdisk-balanced
+
+sap_swap_disk_size: 50
+sap_swap_disk_type: hyperdisk-balanced
+
+sap_oracle_sid_disk_size: 50
+sap_oracle_sid_disk_type: hyperdisk-balanced
+
+sap_sapdata1_disk_size: 100
+sap_sapdata2_disk_size: 100
+sap_sapdata3_disk_size: 100
+sap_sapdata4_disk_size: 100
+sap_sapdata_disk_type: hyperdisk-balanced
+
+sap_origloga_disk_size: 50
+sap_origlogb_disk_size: 50
+sap_origlog_disk_type: hyperdisk-balanced
+
+sap_mirrloga_disk_size: 50
+sap_mirrlogb_disk_size: 50
+sap_mirrlog_disk_type: hyperdisk-balanced
+
+sap_oraarch_disk_size: 50
+sap_oraarch_disk_type: hyperdisk-balanced
+
+sap_sapreorg_disk_size: 50
+sap_sapreorg_disk_type: hyperdisk-balanced
+
+sap_sapprof_disk_size: 50
+sap_sapprof_disk_type: hyperdisk-balanced
+
+sap_sapbackup_disk_size: 50
+sap_sapbackup_disk_type: hyperdisk-balanced
+
+sap_saptrace_disk_size: 50
+sap_saptrace_disk_type: hyperdisk-balanced
+
+sap_subnetwork_project_id: sap-iac-test
+sap_ssh_user: manjuan
