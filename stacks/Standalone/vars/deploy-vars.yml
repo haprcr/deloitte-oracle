@@ -17,11 +17,11 @@ sap_source_image_family: oracle-linux-9
 sap_source_image_project: oracle-linux-cloud
 sap_oracle_subnetwork: db-central 
 sap_tf_state_bucket: sap-terraform-state-bg-mj
-sap_tf_state_bucket_prefix: linux-oracle-1
+sap_tf_state_bucket_prefix: linux-oracle-2
 sap_zone: us-central1-a
 
-sap_oracle_instance_name: usgcpora1 
-sap_oracle_instance_ip: 10.5.0.69
+sap_oracle_instance_name: usgcpora2 
+sap_oracle_instance_ip: 10.5.0.72
 sap_oracle_instance_type: c4-highmem-4 
 sap_oracle_service_account_email: 811811474621-compute@developer.gserviceaccount.com
 sap_oracle_sid: SPD 
@@ -77,4 +77,4 @@ sap_saptrace_disk_size: 50
 sap_saptrace_disk_type: hyperdisk-balanced
 
 sap_subnetwork_project_id: sap-iac-test
-sap_ssh_user: manjuan
+sap_ssh_user: harshapriyacr

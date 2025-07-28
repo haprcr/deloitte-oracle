@@ -12,96 +12,124 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sap_hana_install_files_bucket:  oracle-deloitte
-# sap_hana_product_version: hanarev78
-# sap_product_and_version: 'HANA/{{ sap_hana_product_version }}'
-sap_product_vars:
-  'HANA/hanarev78':
-    sap_hana_upgrade_file_name: 'IMDB.*\.SAR'
-    sap_hana_sapcar_file_name: 'SAPCAR.EXE'
-    sap_hostagent_rpm_file_name: 'saphostagentrpm_207-20005731.rpm'
-    sap_hana_lss_file_name: 'HDB.*\.SAR'
-sap_hostagent_rpm_remote_path: "/hana/shared/software"
-sap_hana_data_partition_name: hanadata
-sap_hana_log_partition_name: hanalog
-sap_hana_usrsap_partition_name: hanausrsap
-sap_hana_shared_partition_name: hanashared
-sap_hana_swap_partition_name: swap
-# sap_hana_lssshared_partition_name: hanalssshared
-sap_hana_lssshared_partition_name: lss
-sap_hana_shared_mountpoint: /hana/shared
-sap_hana_data_mountpoint: /hana/data
-sap_hana_log_mountpoint: /hana/log
-sap_hana_usr_mountpoint: /usr/sap
-sap_hana_swap_mountpoint: /SWAP
-# sap_hana_lssshared_mountpoint: /hana/lssshared
-sap_hana_lssshared_mountpoint: /lss/shared              
-sap_hana_sid: BG1
-sap_hana_user: '{{ sap_hana_sid | lower }}adm'
-sap_sapsys_gid: 79
-sap_hana_system_uid: 2525
-sap_hana_instance_name: '{{ ansible_hostname }}'
-sap_hana_instance_number: "00"
-sap_preconfigure_modify_etc_hosts: true
-sap_domain: automation.local
-sap_hana_env_type: development
-sap_hana_mem_restrict: "n"
-sap_hana_deployment_create_initial_tenant: 'y'
-# sap_hana_password is required unless all of the other passwords are set.
-# It defaults to an empty string for those cases where all the other passwords are
-# set, to avoid an undefined variable error.
-sap_hana_password: ''
-sap_hana_ase_user_password: '{{ sap_hana_password }}'
-sap_hana_db_system_password: '{{ sap_hana_password }}'
-sap_hana_common_master_password: '{{ sap_hana_password }}'
-sap_hana_root_password: '{{ sap_hana_password }}'
-sap_hana_sapadm_password: '{{ sap_hana_password }}'
-sap_hana_sidadm_password: '{{ sap_hana_password }}'
-sap_hana_fast_restart: true
+sap_ora_disks:
+- name: sapmnt
+  partition_path: sapmnt
+- name: usrsap
+  partition_path: usrsap
+- name: swap
+  partition_path: swap
+- name: oracle
+  partition_path: oracle
+- name: oraclesid
+  partition_path: oraclesid
+- name: sapdata
+  partition_path: sapdata
+- name: origlog
+  partition_path: origlog
+- name: mirrlog
+  partition_path: mirrlog
+- name: oraarch
+  partition_path: oraarch
+- name: sapreorg
+  partition_path: sapreorg
+- name: sapprof
+  partition_path: sapprof
+- name: sapbackup
+  partition_path: sapbackup
+- name: saptrace
+  partition_path: saptrace
 
-# Backint install vars
-sap_hana_backint_bucket_name: ''
-sap_hana_backint_install: '{{ sap_hana_backint_bucket_name | length > 0 }}'
-backint_temp_path: /tmp/backint-gcs-install.sh
-backint_dir: "/usr/sap/{{ sap_hana_sid }}/SYS/global/hdb/opt/backint"
-backint_config_path: "{{ backint_dir }}/backint-gcs/parameters.txt"
-
-sap_hana_disks:
-  - { name: data, partition_path : "{{ sap_hana_data_partition_name }}"}
-  - { name: log,  partition_path : "{{ sap_hana_log_partition_name }}"}
-  - { name: shared, partition_path : "{{ sap_hana_shared_partition_name }}"}
-  - { name: usrsap, partition_path : "{{ sap_hana_usrsap_partition_name }}"}
-  - { name: swap, partition_path : "{{ sap_hana_swap_partition_name }}"}
-  - { name: lssshared, partition_path : "{{ sap_hana_lssshared_partition_name }}"}
-
-sap_hana_logvols:
-  shared:
-    size: 100%VG 
-    vol: "{{ sap_hana_shared_partition_name }}" 
-    mountpoint: "{{ sap_hana_shared_mountpoint }}"
+sap_ora_logvols:
+  sapmnt:
+    size: 100%VG
+    vol: sapmnt
+    mountpoint: /sapmnt
     fstype: xfs
-  data:
-    size: 100%VG 
-    vol: "{{ sap_hana_data_partition_name }}"
-    mountpoint: "{{ sap_hana_data_mountpoint }}"
-    fstype: xfs
-  log:
-    size: 100%VG 
-    vol: "{{ sap_hana_log_partition_name }}"
-    mountpoint: "{{ sap_hana_log_mountpoint }}"
-    fstype: xfs
-  usr:
-    size: 100%VG 
-    vol: "{{ sap_hana_usrsap_partition_name }}"
-    mountpoint: "{{ sap_hana_usr_mountpoint }}"
+  usrsap:
+    size: 100%VG
+    vol: usrsap
+    mountpoint: /usr/sap
     fstype: xfs
   swap:
-    size: 100%VG 
-    vol: "{{ sap_hana_swap_partition_name }}"
-    mountpoint: none 
-    fstype: swap
-  lssshared:
     size: 100%VG
-    vol: "{{ sap_hana_lssshared_partition_name }}" 
-    mountpoint: "{{ sap_hana_lssshared_mountpoint }}"
+    vol: swap 
+    mountpoint: none 
+    fstype: swap 
+  oracle:
+    size: 100%VG
+    vol: oracle
+    mountpoint: /oracle
     fstype: xfs
+  oraclesid:
+    size: 100%VG
+    vol: oraclesid
+    mountpoint: "/oracle/{{ sap_oracle_sid }}"
+    fstype: xfs
+  oraarch:
+    size: 100%VG
+    vol: oraarch
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/oraarch"
+    fstype: xfs
+  sapreorg:
+    size: 100%VG
+    vol: sapreorg
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapreorg"
+    fstype: xfs
+  sapprof:
+    size: 100%VG
+    vol: sapprof
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapprof"
+    fstype: xfs
+  sapbackup:
+    size: 100%VG
+    vol: sapbackup
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapbackup"
+    fstype: xfs
+  saptrace:
+    size: 100%VG
+    vol: saptrace
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/saptrace"
+    fstype: xfs
+  sapdata1:
+    size: "{{ sap_sapdata1_disk_size }}G"
+    vol: sapdata
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapdata1"
+    fstype: xfs
+  sapdata2:
+    size: "{{ sap_sapdata2_disk_size }}G"
+    vol: sapdata
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapdata2"
+    fstype: xfs
+  sapdata3:
+    size: "{{ sap_sapdata3_disk_size }}G"
+    vol: sapdata
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapdata3"
+    fstype: xfs
+  sapdata4:
+    size: "{{ (sap_sapdata4_disk_size | int) - 1 }}G"
+    vol: sapdata
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/sapdata4"
+    fstype: xfs
+  origloga:
+    size: "{{ sap_origloga_disk_size }}G"
+    vol: origlog
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/origlogA"
+    fstype: xfs
+  origlogb:
+    size: "{{ (sap_origlogb_disk_size | int) - 1 }}G"
+    vol: origlog
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/origlogB"
+    fstype: xfs
+  mirrloga:
+    size: "{{ sap_mirrloga_disk_size }}G"
+    vol: mirrlog
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/mirrlogA"
+    fstype: xfs
+  mirrlogb:
+    size: "{{ (sap_mirrlogb_disk_size | int) - 1 }}G"
+    vol: mirrlog
+    mountpoint: "/oracle/{{ sap_oracle_sid }}/mirrlogB"
+    fstype: xfs
+
+sap_oracle_sid: SPD
