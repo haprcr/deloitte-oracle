@@ -19,13 +19,6 @@
     project: '{{ sap_project_id }}'
   when: sap_state == 'present'
 
-- name: ensure hana backint backup bucket exists
-  gcp_storage_bucket:
-    name: '{{ sap_hana_backint_bucket_name }}'
-    auth_kind: application
-    project: '{{ sap_project_id }}'
-  when: sap_hana_backint_install|bool == true
-
 - name: check if ssh key files are present
   stat:
     path: '{{ item }}'
@@ -44,31 +37,20 @@
 - name: extract pub key content
   set_fact:
     pub_key_content: "{{lookup('file', '{{ sap_ssh_pub_key }}')}}"
-    hanascaleup_startup_script: "hanascaleup_startup_script.sh"
-    netweaver_startup_script: "netweaver_startup_script.sh"
+    oracle_startup_script: "oracle_startup_script.sh"
   when:
   - sap_ansible_is_push_mode
   - true in stat_ssh_key_files_exists
 
-- name: expand hana startup script
+- name: expand oracle startup script
   template:
-    src: '{{ hanascaleup_startup_script }}.j2'
-    dest: '{{ role_path }}/files/{{ hanascaleup_startup_script }}'
+    src: '{{ oracle_startup_script }}.j2'
+    dest: '{{ role_path }}/files/{{ oracle_startup_script }}'
     mode: '0755'
   when:
   - sap_ansible_is_push_mode
   - true in stat_ssh_key_files_exists
-  - sap_hana_instance_name is defined
-
-- name: expand netweaver startup script
-  template:
-    src: '{{ netweaver_startup_script }}.j2'
-    dest: '{{ role_path }}/files/{{ netweaver_startup_script }}'
-    mode: '0755'
-  when:
-  - sap_ansible_is_push_mode
-  - true in stat_ssh_key_files_exists
-  - sap_nw_instance_name is defined
+  - sap_oracle_instance_name is defined
 
 - block:
   - name: download ssh key files
@@ -120,11 +102,13 @@
     register: existing_tf_exec
     changed_when: false
     failed_when: false
+
   - name: check for existing terraform version
     command: '{{ existing_tf_exec.stdout }} version'
     register: existing_tf_version
     changed_when: false
     when: existing_tf_exec.rc == 0
+
   - name: define if existing terraform version is correct
     set_fact:
       existing_tf_version_correct: '{{
@@ -137,10 +121,18 @@
       state: directory
     when: not existing_tf_version_correct
 
+  - name: download and unarchive terraform
+    unarchive:
+      src: '{{ sap_tf_download_url }}'
+      dest: '{{ sap_cache_dir }}/terraform-{{ sap_tf_version }}'
+      remote_src: true
+    when: not existing_tf_version_correct
+
   - name: define terraform executable
     set_fact:
       sap_tf_exec: '{{ existing_tf_exec.stdout }}'
     when: existing_tf_version_correct
+
   - name: define terraform executable
     set_fact:
       sap_tf_exec: '{{ sap_cache_dir }}/terraform-{{ sap_tf_version }}/terraform'
@@ -152,35 +144,21 @@
       state: directory
     register: terraform_tempdir
     changed_when: false
+
   - name: write terraform variables to a file
     copy:
       dest: '{{ terraform_tempdir.path }}/vars.tf.json'
       content: '{{ (sap_tf_variables_defaults if sap_ansible_is_push_mode else {}) | combine(sap_tf_variables) | to_json }}'
     changed_when: false
-  # - name: apply terraform
-  #   terraform:
-  #     backend_config:
-  #       bucket: '{{ sap_tf_state_bucket }}'
-  #       prefix: '{{ sap_tf_state_bucket_prefix }}'
-  #     binary_path: '{{ sap_tf_exec }}'
-  #     #force_init: true
-  #     project_path: '{{ sap_tf_project_path }}'
-  #     state: '{{ sap_state }}'
-  #     variables_file: '{{ terraform_tempdir.path }}/vars.tf.json'
-  #     variables:
-  #       hana_script_path: '{{ role_path }}/files/{{ hanascaleup_startup_script }}'
-  #       nw_script_path: '{{ role_path }}/files/{{ netweaver_startup_script }}'
-  #   register: terraform
+
   - name: Run terraform init with custom plugin directory
     shell:
       cmd: |
-        {{ sap_tf_exec }} init \
-        -backend-config="bucket={{ sap_tf_state_bucket }}" \
-        -backend-config="prefix={{ sap_tf_state_bucket_prefix }}" \
-        -reconfigure \
-        -plugin-dir="{{ sap_terraform_plugin_path }}"
+        {{ sap_tf_exec }} init -backend-config="bucket={{ sap_tf_state_bucket }}" \
+         -backend-config="prefix={{ sap_tf_state_bucket_prefix }}" \
+         -reconfigure
     args:
-      chdir: "{{ sap_tf_project_path }}"  # Set working directory to the Terraform project path
+      chdir: "{{ sap_tf_project_path }}"
     register: terraform_init
 
   - name: Check if Terraform state has resources
@@ -196,7 +174,8 @@
     shell:
       cmd: |
         {{ sap_tf_exec }} refresh \
-        -var-file="{{ terraform_tempdir.path }}/vars.tf.json"
+        -var-file="{{ terraform_tempdir.path }}/vars.tf.json" \
+        -var="oracle_script_path={{ role_path }}/files/{{ oracle_startup_script }}"
     args:
       chdir: "{{ sap_tf_project_path }}"  # Set working directory to the Terraform project path
     when: terraform_state.stdout_lines | length > 0
@@ -207,8 +186,7 @@
       cmd: |
         {{ sap_tf_exec }} {{ 'apply' if sap_state == 'present' else 'destroy' }} \
         -var-file="{{ terraform_tempdir.path }}/vars.tf.json" \
-        -var="hana_script_path={{ role_path }}/files/{{ hanascaleup_startup_script }}" \
-        -var="nw_script_path={{ role_path }}/files/{{ netweaver_startup_script }}" \
+        -var="oracle_script_path={{ role_path }}/files/{{ oracle_startup_script }}" \
         -auto-approve
     args:
       chdir: "{{ sap_tf_project_path }}"
@@ -243,7 +221,6 @@
       state: directory
     register: add_host_tempdir
     changed_when: false
-
   - name: define add_host tasks
     copy:
       dest: '{{ add_host_tempdir.path }}/add_hosts.yml'
@@ -270,57 +247,31 @@
       path: '{{ add_host_tempdir.path }}'
       state: absent
 
-  - name: clean up local startup script file for hana instance
+  - name: clean up local startup script file for oracle instance
     file:
-      path: '{{ role_path }}/files/{{ hanascaleup_startup_script }}'
+      path: '{{ role_path }}/files/{{ oracle_startup_script }}'
       state: absent
     when:
       - sap_ansible_is_push_mode
       - true in stat_ssh_key_files_exists
-      - sap_hana_instance_name != ''
+      - sap_oracle_instance_name != ''
 
-  - name: clean up local startup script file for netweaver instance
-    file:
-      path: '{{ role_path }}/files/{{ netweaver_startup_script }}'
-      state: absent
-    when:
-      - sap_ansible_is_push_mode
-      - true in stat_ssh_key_files_exists
-      - sap_nw_instance_name != ''
-
-  - name: stop hana compute instance
+  - name: stop oracle compute instance
     command: |
-      gcloud compute instances stop {{ sap_hana_instance_name }} --zone {{ sap_zone }}
+      gcloud compute instances stop {{ sap_oracle_instance_name }} --zone {{ sap_zone }}
     when:
       - sap_ansible_is_push_mode
       - true in stat_ssh_key_files_exists
-      - sap_hana_instance_name != ''
+      - sap_oracle_instance_name != ''
 
-  - name: stop netweaver compute instance
+  - name: start oracle compute instance
     command: |
-      gcloud compute instances stop {{ sap_nw_instance_name }} --zone {{ sap_zone }}
+      gcloud compute instances start {{ sap_oracle_instance_name }} --zone {{ sap_zone }}
     when:
       - sap_ansible_is_push_mode
       - true in stat_ssh_key_files_exists
-      - sap_nw_instance_name != ''
-
-  - name: start hana compute instance
-    command: |
-      gcloud compute instances start {{ sap_hana_instance_name }} --zone {{ sap_zone }}
-    when:
-      - sap_ansible_is_push_mode
-      - true in stat_ssh_key_files_exists
-      - sap_hana_instance_name != ''
-
-  - name: start netweaver compute instance
-    command: |
-      gcloud compute instances start {{ sap_nw_instance_name }} --zone {{ sap_zone }}
-    when:
-      - sap_ansible_is_push_mode
-      - true in stat_ssh_key_files_exists
-      - sap_nw_instance_name != ''
+      - sap_oracle_instance_name != ''
   when: inventory_read != 'false'
-
 
 - name: wait for hosts
   # Run a command with sudo to ensure the guest agent has added `sap_ssh_user` _and_ it
