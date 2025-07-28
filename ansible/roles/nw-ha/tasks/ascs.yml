@@ -80,7 +80,7 @@
     path: '{{ item.mountpoint }}'
     fstype: nfs
     src: '{{ item.source }}'
-    opts: 'rw,rsize=65536,wsize=65536,hard,vers=3,tcp,intr,timeo=18,retrans=200'
+    opts: 'rw,rsize=65536,wsize=65536,hard,vers=4.1,tcp,intr,timeo=18,retrans=200'
     state: mounted
   loop:
     - source: '{{ sap_nw_ascs_nfs_mount_src }}'

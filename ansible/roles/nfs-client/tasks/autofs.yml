@@ -44,8 +44,6 @@
     mode: '0644'
   register: add_sap_autofs
 
-- debug:
-    msg: '{{ sap_nw_nfsvols_aas}}'
 
 - name: configure autofs auto.sap
   template:

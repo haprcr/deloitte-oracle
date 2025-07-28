@@ -13,52 +13,30 @@
 # limitations under the License.
 
 - block:
-  - command: |
-      pcs stonith status
+  - command: pcs property show
     register: pcs_command_status
     changed_when: false
-
   - name: configure property startup-fencing
     command: pcs property set startup-fencing=true
-    when:
-      - 'startup-fencing: true' not in pcs_command_status.stdout
-      - sap_system_type == "nw"
-
+    when: |
+      'startup-fencing: true' not in pcs_command_status.stdout
   - name: configure property stonith-enabled
     command: pcs property set stonith-enabled=true
-    when:
-      - 'stonith-enabled: true' not in pcs_command_status.stdout
-      - sap_system_type == "nw"
-
+    when: |
+      'stonith-enabled: true' not in pcs_command_status.stdout
   - name: configure property stonith-timeout
     command: pcs property set stonith-timeout=300s
-    when:
-      - 'stonith-timeout: 300s' not in pcs_command_status.stdout
-      - sap_system_type == "nw"
+    when: |
+      'stonith-timeout: 300s' not in pcs_command_status.stdout
 
   - name: define fence_gce instance argument
     set_fact:
       fence_gce_instance_argument: '{{ "port" if fence_agents_release | int < 30 else "plug" }}'
-    when: sap_system_type == "nw"
 
-  - name: configure stonith resources on primary
-    command: >-
-      pcs stonith create STONITH-{{ sap_hana_primary_instance_name }} fence_gce 
-      port={{ sap_hana_primary_instance_name }}
-      zone={{ sap_hana_primary_zone }} 
-      project={{ sap_project_id }}
-      pcmk_reboot_timeout=300 pcmk_monitor_retries=4 pcmk_delay_max=30 
-      op monitor interval="300s" timeout="120s" 
-      op start interval="0" timeout="60s"
-    delegate_to: "{{ sap_hana_primary_instance_ip }}" 
-    ignore_errors: true
-    when: sap_hana_ilb_name is defined or sap_hana_ilb_name is not none
-  
   - command: |
-      pcs stonith status
+      pcs stonith show
     register: pcs_command_status
     changed_when: false
-
   - name: configure stonith resources
     command: >-
       pcs stonith create STONITH-{{ item.instance }} fence_gce
@@ -71,28 +49,13 @@
       zone: '{{ sap_primary_zone }}'
     - instance: '{{ sap_secondary_instance }}'
       zone: '{{ sap_secondary_zone }}'
-    when:
-      - 'STONITH-' + item.instance not in pcs_command_status.stdout
-      - sap_system_type == "nw"
-
-  - name: configure stonith resources on secondary
-    command: >-
-      pcs stonith create STONITH-{{ sap_hana_secondary_instance_name }} fence_gce 
-      port={{ sap_hana_secondary_instance_name }}
-      zone={{ sap_hana_secondary_zone }} 
-      project={{ sap_project_id }}
-      pcmk_reboot_timeout=300 pcmk_monitor_retries=4 pcmk_delay_max=30 
-      op monitor interval="300s" timeout="120s" 
-      op start interval="0" timeout="60s"
-    delegate_to: "{{ sap_hana_primary_instance_ip }}" 
-    ignore_errors: true
-    when: sap_hana_ilb_name is defined or sap_hana_ilb_name is not none
+    when: |
+      'STONITH-' + item.instance not in pcs_command_status.stdout
 
   - command: |
       pcs constraint location show
     register: pcs_command_status
     changed_when: false
-
   - name: configure stonith location constraints
     command: >-
       pcs constraint location STONITH-{{ item.this }}
@@ -102,22 +65,8 @@
       other: '{{ sap_secondary_instance }}'
     - this: '{{ sap_secondary_instance }}'
       other: '{{ sap_primary_instance }}'
-    when:
-      - 'Resource: STONITH-' + item.this not in pcs_command_status.stdout
-      - sap_system_type == "nw"
-
-  - name: configure stonith location constraints
-    command: >-
-      pcs constraint location STONITH-{{ sap_hana_primary_instance_name }} avoids {{sap_hana_primary_instance_name}}
-    delegate_to: "{{ sap_hana_primary_instance_ip }}" 
-    when: sap_hana_ilb_name is defined or sap_hana_ilb_name is not none
-  
-  - name: configure stonith location constraints
-    command: >-
-      pcs constraint location STONITH-{{ sap_hana_secondary_instance_name }} avoids {{sap_hana_secondary_instance_name}}
-    delegate_to: "{{ sap_hana_primary_instance_ip }}"
-    when: sap_hana_ilb_name is defined or sap_hana_ilb_name is not none
-
+    when: |
+      'Resource: STONITH-' + item.this not in pcs_command_status.stdout
   when: |
     ansible_os_family == 'RedHat'
 

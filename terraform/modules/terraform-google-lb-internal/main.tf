@@ -28,17 +28,13 @@ data "google_compute_subnetwork" "network" {
 }
 
 resource "google_compute_address" "internal_with_subnet_and_address" {
-  name         = var.name
+  name         = "${var.name}"
   subnetwork   = data.google_compute_subnetwork.network.self_link
   address_type = "INTERNAL"
   address      = var.ip_address
   region       = var.region
   project      = var.project
   purpose      = "GCE_ENDPOINT"
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "google_compute_forwarding_rule" "default" {
@@ -56,10 +52,6 @@ resource "google_compute_forwarding_rule" "default" {
   ports                 = var.ports
   all_ports             = var.all_ports
   service_label         = var.service_label
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "google_compute_region_backend_service" "default" {
@@ -87,16 +79,12 @@ resource "google_compute_region_backend_service" "default" {
     }
   }
   health_checks = [var.health_check["type"] == "tcp" ? google_compute_health_check.tcp[0].self_link : google_compute_health_check.http[0].self_link]
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "google_compute_health_check" "tcp" {
   count   = var.health_check["type"] == "tcp" && var.ilb_required == true ? 1 : 0
   project = var.project
-  name    = var.health_check_name
+  name    = var.health_check_name 
 
   timeout_sec         = var.health_check["timeout_sec"]
   check_interval_sec  = var.health_check["check_interval_sec"]
@@ -110,16 +98,12 @@ resource "google_compute_health_check" "tcp" {
     port_name    = var.health_check["port_name"]
     proxy_header = var.health_check["proxy_header"]
   }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "google_compute_health_check" "http" {
   count   = var.health_check["type"] == "http" && var.ilb_required == true ? 1 : 0
   project = var.project
-  name    = var.health_check_name
+  name    = var.health_check_name 
 
   timeout_sec         = var.health_check["timeout_sec"]
   check_interval_sec  = var.health_check["check_interval_sec"]
@@ -133,9 +117,5 @@ resource "google_compute_health_check" "http" {
     response     = var.health_check["response"]
     port_name    = var.health_check["port_name"]
     proxy_header = var.health_check["proxy_header"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 }

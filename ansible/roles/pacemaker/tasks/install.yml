@@ -33,17 +33,6 @@
     yum:
       name: haproxy
 
-  - name: configure haproxy for hana
-    template:
-      src: etc/haproxy/haproxy.hana.cfg.j2
-      dest: '/etc/haproxy/haproxy.cfg'
-      mode: 0644
-      owner: root
-      group: root
-    when:
-      - sap_hana_ilb_name is defined
-      - sap_hana_ilb_name is not none
-
   - name: add haproxy to systemd
     template:
       src: etc/systemd/system/haproxy.service.j2
@@ -51,8 +40,6 @@
       mode: 0644
       owner: root
       group: root
-    when:
-      - sap_hana_ilb_name is undefined or sap_hana_ilb_name is none
   
   - name: configure haproxy for ascs
     template:
@@ -61,8 +48,6 @@
       mode: 0644
       owner: root
       group: root
-    when:
-      - sap_hana_ilb_name is undefined or sap_hana_ilb_name is none
   
   - name: configure haproxy for ers
     template:
@@ -71,9 +56,6 @@
       mode: 0644
       owner: root
       group: root
-    when:
-      - sap_hana_ilb_name is undefined or sap_hana_ilb_name is none
-
   when: |
     sap_use_lb and ansible_os_family == 'RedHat'
 

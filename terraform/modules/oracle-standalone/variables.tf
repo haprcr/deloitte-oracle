@@ -195,3 +195,4 @@ variable "saptrace_disk_size" {
 variable "saptrace_disk_type" {
   description = "The GCE saptrace disk type for Oralce."
 }
+

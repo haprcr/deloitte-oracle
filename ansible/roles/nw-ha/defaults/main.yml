@@ -13,14 +13,10 @@
 # limitations under the License.
 
 hosts_file_entries:
-- ip: '{{ sap_hana_vip }}'
-  names: ['{{ sap_hana_virtual_host }}.{{ sap_host_fqdn }}', '{{ sap_hana_virtual_host }}']
 - ip: '{{ sap_nw_ascs_vip }}'
   names: ['{{ sap_nw_ascs_virtual_host }}.{{ sap_host_fqdn }}', '{{ sap_nw_ascs_virtual_host }}']
 - ip: '{{ sap_nw_ers_vip }}'
   names: ['{{ sap_nw_ers_virtual_host }}.{{ sap_host_fqdn }}', '{{ sap_nw_ers_virtual_host }}']
-- ip: '{{ sap_nw_pas_alias_ip }}'
-  names: ['{{ sap_nw_pas_virtual_host }}.{{ sap_host_fqdn }}', '{{ sap_nw_pas_virtual_host }}']
 
 sap_is_aas: false
 sap_is_ascs: false
@@ -52,30 +48,15 @@ sap_nw_ers_instance_name: '{{
   | list
   | first
 }}'
-sap_nw_pas_instance_name: '{{
-  hostvars.values()
-  | selectattr("sap_is_pas", "defined")
-  | selectattr("sap_is_pas")
-  | map(attribute="ansible_hostname")
-  | list
-  | first
-}}'
-sap_nw_pas_virtual_host: '{{ sap_nw_pas_virtual_host }}'
-
-sap_domain: '{{ ansible_domain }}'
-
-sap_hana_password: ''
-sap_hana_db_system_password: '{{ sap_hana_password }}'
-sap_hana_sidadm_password: '{{ sap_hana_password }}'
-sap_hana_user: '{{ sap_hana_sid | lower }}adm'
 
 sap_hana_primary_zone: '{{ sap_primary_zone }}'
 sap_hana_secondary_zone: '{{ sap_secondary_zone }}'
 
+sap_domain: '{{ ansible_domain }}'
+
 sap_system_type: "nw"
 sap_nw_ascs_instance_number: '{{ }}'
 sap_nw_ers_instance_number: '16'
-sap_nw_pas_instance_number: '06'
 sap_nw_ascs_instance_name: '{{ sap_ascs_instance_name }}' 
 sap_nw_ers_instance_name: '{{ sap_ers_instance_name }}' 
 sap_nw_ascs_virtual_host: '{{ sap_ascs_instance_name }}'
@@ -96,7 +77,7 @@ sap_nw_user: '{{ sap_nw_sid | lower }}adm'
 sap_nw_cluster_user_password: '{{ sap_nw_password }}'
 sap_nw_sidadm_uid: 2000
 sap_nw_sapadm_uid: 2001
-sap_sapsys_gid: 79
+sap_sapsys_gid: 2626
 
 sap_scs_name: '{{ sap_product_vars[sap_nw_product_and_version].scs_name | default("ASCS") }}'
 
@@ -145,20 +126,6 @@ sap_nw_ascs_nfs_mount_src: '{{ sap_nw_nfs_src }}/{{ sap_scs_name }}{{ sap_nw_asc
 sap_nw_ascs_nfs_mount_dest: '/usr/sap/{{ sap_nw_sid }}/{{ sap_scs_name }}{{ sap_nw_ascs_instance_number }}'
 sap_nw_ers_nfs_mount_src: '{{ sap_nw_nfs_src }}/ERS{{ sap_nw_ers_instance_number }}'
 sap_nw_ers_nfs_mount_dest: '/usr/sap/{{ sap_nw_sid }}/ERS{{ sap_nw_ers_instance_number }}'
-sap_nw_nfsvols_aas:
-- source: '{{ sap_nw_sapmnt_nfs_mount_src }}'
-  mountpoint: /sapmnt
-- source: '{{ sap_nw_saptrans_nfs_mount_src }}'
-  mountpoint: /usr/sap/trans
-- source: '{{ sap_nw_usrsys_nfs_mount_src }}'
-  mountpoint: '{{ sap_nw_usrsys_nfs_mount_dest }}' 
-sap_nw_nfsvols_pas:
-- source: '{{ sap_nw_sapmnt_nfs_mount_src }}'
-  mountpoint: /sapmnt
-- source: '{{ sap_nw_saptrans_nfs_mount_src }}'
-  mountpoint: /usr/sap/trans
-- source: '{{ sap_nw_usrsys_nfs_mount_src }}'
-  mountpoint: '{{ sap_nw_usrsys_nfs_mount_dest }}' 
 sap_nw_nfsvols_scs:
 - source: '{{ sap_nw_sapmnt_nfs_mount_src }}'
   mountpoint: /sapmnt
@@ -190,21 +157,6 @@ sap_nw_product_version: '750'
 sap_nw_product_and_version: '{{ sap_nw_product }}/{{ sap_nw_product_version }}'
 # sap_nw_product and sap_nw_product_version must be set to one of the <product>/<version> combos in sap_product_vars.
 sap_product_vars:
-  'NetWeaver/752':
-    db_product_id: 'NW_ABAP_DB:NW752.HDB.HA'
-    pas_product_id: 'NW_ABAP_CI:NW752.HDB.HA'
-    aas_product_id: 'NW_DI:NW752.HDB.HA'
-    ascs_product_id: 'NW_ABAP_ASCS:NW752.HDB.HA'
-    ers_product_id: 'NW_ERS:NW752.HDB.HA'
-    user_product_id: 'NW_Users_Create:GENERIC.SYB.PD'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
-    swpm_path: '{{ sap_nw_install_files_dest }}/SWPM10SP32'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
-    load_files: '{{ sap_nw_install_files_dest }}/NW752'
-    install_files: [HANA_CLIENT, Kernel_Files, NW752, SWPM10SP32]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
-    ensa_version: '1'
   'NetWeaver/750':
     db_product_id: 'NW_ABAP_DB:NW750.HDB.ABAPHA'
     pas_product_id: 'NW_ABAP_CI:NW750.HDB.ABAPHA'
@@ -212,13 +164,13 @@ sap_product_vars:
     ascs_product_id: 'NW_ABAP_ASCS:NW750.HDB.ABAPHA'
     ers_product_id: 'NW_ERS:NW750.HDB.ABAPHA'
     user_product_id: 'NW_Users_Create:GENERIC.SYB.PD'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
+    daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
     swpm_path: '{{ sap_nw_install_files_dest }}/SWPM10SP32'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
+    swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
     load_files: '{{ sap_nw_install_files_dest }}/NW75'
     install_files: [HANA_CLIENT, Kernel_Files, NW75, SWPM10SP32, SWPM1.0]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
+    daa_sar_file_name: SAPEXE_801-80002573.SAR
+    daa_jvm_version: SAPJVM8
     ensa_version: '1'
   'S4HANA/2020':
     db_product_id: 'NW_ABAP_DB:S4HANA2020.CORE.HDB.ABAPHA'
@@ -226,14 +178,14 @@ sap_product_vars:
     aas_product_id: 'NW_DI:S4HANA2020.CORE.HDB.ABAPHA'
     ascs_product_id: 'NW_ABAP_ASCS:S4HANA2020.CORE.HDB.ABAPHA'
     ers_product_id: 'NW_ERS:S4HANA2020.CORE.HDB.ABAPHA'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
+    daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
     user_product_id: 'NW_Users_Create:GENERIC.HDB.PD'
     swpm_path: '{{ sap_nw_install_files_dest }}/SWPM2.0'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
+    swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
     load_files: '{{ sap_nw_install_files_dest }}/Kernel_Files'
     install_files: [Kernel_Files, SWPM2.0, SWPM1.0]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
+    daa_sar_file_name: SAPEXE_801-80002573.SAR
+    daa_jvm_version: SAPJVM8
     ensa_version: '2'
   'S4HANA/1909':
     db_product_id: 'NW_ABAP_DB:S4HANA1909.CORE.HDB.ABAPHA'
@@ -241,61 +193,12 @@ sap_product_vars:
     aas_product_id: 'NW_DI:S4HANA1909.CORE.HDB.ABAPHA'
     ascs_product_id: 'NW_ABAP_ASCS:S4HANA1909.CORE.HDB.ABAPHA'
     ers_product_id: 'NW_ERS:S4HANA1909.CORE.HDB.ABAPHA'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
+    daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
     user_product_id: 'NW_Users_Create:GENERIC.HDB.PD'
     swpm_path: '{{ sap_nw_install_files_dest }}/SWPM2.0'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
+    swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
     load_files: '{{ sap_nw_install_files_dest }}/Kernel_Files'
     install_files: [Kernel_Files, SWPM2.0, SWPM1.0]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
-    ensa_version: '2'
-  'NetWeaver-Java/750':
-    db_product_id: 'NW_Java_DB:NW750.HDB.HA'
-    pas_product_id: 'NW_Java_CI:NW750.HDB.HA'
-    aas_product_id: 'NW_DI:NW750.HDB.HA'
-    ascs_product_id: 'NW_Java_SCS:NW750.HDB.HA'
-    ers_product_id: 'NW_ERS:NW750.HDB.HA'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
-    user_product_id: 'NW_Users_Create:GENERIC.SYB.PD'
-    swpm_path: '{{ sap_nw_install_files_dest }}/SWPM'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM'
-    load_files: '{{ sap_nw_install_files_dest }}/NW75'
-    install_files: [HANA_CLIENT, Kernel_Files, NW75, SWPM]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
-    ensa_version: '1'
-    scs_name: SCS
-    db_sapinst_template: inifile_db_java_hdb.params
-    as_sapinst_template: inifile_as_java_hdb.params
-    db_schema: SAPJAVA1
-  'S4HANA/2023':
-    db_product_id: 'NW_ABAP_DB:S4HANA2023.CORE.HDB.ABAPHA'
-    pas_product_id: 'NW_ABAP_CI:S4HANA2023.CORE.HDB.ABAPHA'
-    aas_product_id: 'NW_DI:S4HANA2023.CORE.HDB.ABAPHA'
-    ascs_product_id: 'NW_ABAP_ASCS:S4HANA2023.CORE.HDB.ABAPHA'
-    ers_product_id: 'NW_ERS:S4HANA2023.CORE.HDB.ABAPHA'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
-    user_product_id: 'NW_Users_Create:GENERIC.HDB.PD'
-    swpm_path: '{{ sap_nw_install_files_dest }}/SWPM2.0'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
-    load_files: '{{ sap_nw_install_files_dest }}/Kernel_Files'
-    install_files: [Kernel_Files, SWPM2.0, SWPM1.0]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
-    ensa_version: '2'
-  'BW4HANA/2023':
-    db_product_id: 'NW_ABAP_DB:BW4HANA2023.CORE.HDB.ABAPHA'
-    pas_product_id: 'NW_ABAP_CI:BW4HANA2023.CORE.HDB.ABAPHA'
-    aas_product_id: 'NW_DI:BW4HANA2023.CORE.HDB.ABAPHA'
-    ascs_product_id: 'NW_ABAP_ASCS:BW4HANA2023.CORE.HDB.ABAPHA'
-    ers_product_id: 'NW_ERS:BW4HANA2023.CORE.HDB.ABAPHA'
-    # daa_product_id: 'NW_DiagnosticsAgent:GENERIC.IND.PD'
-    user_product_id: 'NW_Users_Create:GENERIC.HDB.PD'
-    swpm_path: '{{ sap_nw_install_files_dest }}/SWPM2.0'
-    # swpm_path_daa: '{{ sap_nw_install_files_dest }}/SWPM1.0'
-    load_files: '{{ sap_nw_install_files_dest }}/Kernel_Files'
-    install_files: [Kernel_Files, SWPM2.0]
-    # daa_sar_file_name: SAPEXE_801-80002573.SAR
-    # daa_jvm_version: SAPJVM8
+    daa_sar_file_name: SAPEXE_801-80002573.SAR
+    daa_jvm_version: SAPJVM8
     ensa_version: '2'

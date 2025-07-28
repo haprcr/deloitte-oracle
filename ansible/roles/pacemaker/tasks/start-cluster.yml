@@ -19,7 +19,6 @@
       {{ sap_primary_instance }} {{ sap_secondary_instance }}
     args:
       creates: /etc/corosync/corosync.conf
-
   - name: start and enable services
     service:
       name: '{{ item }}'
@@ -34,7 +33,6 @@
     register: pcs_command_status
     changed_when: false
     failed_when: false
-
   - name: set cluster authentication
     command: >-
       pcs cluster auth {{ sap_primary_instance }} {{ sap_secondary_instance }}
@@ -48,17 +46,16 @@
   - pacemaker_major_version | int < 2
 
 - block:
-  - name: update pcs and pcsd config to fix the pcsd startup issue
-    lineinfile:
-      path: '{{ item.path }}'
-      # search_string: "{{ item.oldline }}"
-      regexp: "{{ item.oldline }}"
-      line: "{{ item.newline }}"
-      backup: yes
-      state: present
-    with_items:
-      - { path: "/usr/sbin/pcs", oldline: "#!/usr/libexec/platform-python -Es", newline: "#!/usr/libexec/platform-python" }
-      - { path: "/usr/sbin/pcsd", oldline: "#!/usr/libexec/platform-python -Es", newline: "#!/usr/libexec/platform-python" }
+  #- name: update pcs and pcsd config to fix the pcsd startup issue
+  #  lineinfile:
+  #    path: '{{ item.path }}'
+  #    search_string: "{{ item.oldline }}"
+  #    line: "{{ item.newline }}"
+  #    backup: yes
+        #state: present
+        #  with_items:
+        #- { path: "/usr/sbin/pcs", oldline: "#!/usr/libexec/platform-python -Es", newline: "#!/usr/libexec/platform-python" }
+        #- { path: "/usr/sbin/pcsd", oldline: "#!/usr/libexec/platform-python -Es", newline: "#!/usr/libexec/platform-python" }
 
   - name: start and enable pcsd
     service:
@@ -70,7 +67,6 @@
     register: pcs_command_status
     changed_when: false
     failed_when: false
-    
   - name: set cluster authentication
     command: >
       pcs host auth {{ sap_primary_instance }} {{ sap_secondary_instance }}
@@ -98,43 +94,6 @@
     loop:
     - corosync.service
     - pacemaker.service
-    when: sap_system_type == 'nw'
-
-  - name: configure corosync for hana
-    template:
-      src: etc/corosync/corosync.conf.hana.j2
-      dest: /etc/corosync/corosync.conf
-      mode: 0644
-      group: root
-    when: sap_system_type == 'hana'
-
-  - name: Sync cluster configuration 
-    command: pcs cluster sync corosync
-    when: sap_system_type == 'hana'
-
-  - name: Enable cluster configuration 
-    command: pcs cluster enable --all
-    when: sap_system_type == 'hana'
-
-  - name: Start cluster configuration 
-    command: pcs cluster start --all
-    when: sap_system_type == 'hana'
-
-  - name: Pause for 180 seconds to confgure cluster
-    wait_for:
-      timeout: 180
-
-  - name: Configure cluster for defaults
-    command: pcs resource defaults update resource-stickiness=1000
-    when: sap_system_type == 'hana'
-
-  - name: Update cluster migration-threshold 
-    command: pcs resource defaults update migration-threshold=5000
-    when: sap_system_type == 'hana'
-      
-  - name: Update timeout cluster configuration 
-    command: pcs resource op defaults update timeout=600s
-    when: sap_system_type == 'hana'
   when:
   - ansible_os_family == 'RedHat'
   - pacemaker_major_version | int >= 2

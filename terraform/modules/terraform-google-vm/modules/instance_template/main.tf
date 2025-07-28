@@ -18,8 +18,13 @@
 # Data Sources
 ###############
 data "google_compute_image" "image" {
-  project = var.source_image_project
-  name    = var.source_image
+  project = var.source_image != "" ? var.source_image_project : "centos-cloud"
+  name    = var.source_image != "" ? var.source_image : "centos-6-v20180716"
+}
+
+data "google_compute_image" "image_family" {
+  project = var.source_image_family != "" ? var.source_image_project : "centos-cloud"
+  family  = var.source_image_family != "" ? var.source_image_family : "centos-6"
 }
 
 #########
@@ -29,7 +34,7 @@ data "google_compute_image" "image" {
 locals {
   boot_disk = [
     {
-      source_image = data.google_compute_image.image.self_link
+      source_image = var.source_image != "" ? data.google_compute_image.image.self_link : data.google_compute_image.image_family.self_link
       disk_size_gb = var.disk_size_gb
       disk_type    = var.disk_type
       auto_delete  = var.auto_delete
@@ -75,9 +80,9 @@ resource "google_compute_instance_template" "tpl" {
       type         = lookup(disk.value, "type", null)
 
       dynamic "disk_encryption_key" {
-        for_each = var.pd_kms_key != "" ? [""] : []
+        for_each = lookup(disk.value, "disk_encryption_key", [])
         content {
-          kms_key_self_link = var.pd_kms_key
+          kms_key_self_link = lookup(disk_encryption_key.value, "kms_key_self_link", null)
         }
       }
     }
@@ -119,7 +124,7 @@ resource "google_compute_instance_template" "tpl" {
   # scheduling must have automatic_restart be false when preemptible is true.
   scheduling {
     preemptible       = var.preemptible
-    automatic_restart = !var.preemptible
+    automatic_restart = ! var.preemptible
   }
 
   dynamic "shielded_instance_config" {

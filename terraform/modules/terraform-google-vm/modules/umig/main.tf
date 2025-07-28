@@ -49,7 +49,7 @@ resource "google_compute_instance_from_template" "compute_instance" {
   project  = var.project_id
   count    = local.num_instances
   name     = local.hostname
-  zone     = var.zone != "" ? var.zone : data.google_compute_zones.available.names[count.index % length(data.google_compute_zones.available.names)]
+  zone = var.zone != "" ? var.zone : data.google_compute_zones.available.names[count.index % length(data.google_compute_zones.available.names)]
 
   network_interface {
     network            = var.network
@@ -76,18 +76,14 @@ resource "google_compute_instance_from_template" "compute_instance" {
 
   source_instance_template = var.instance_template
   deletion_protection      = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "google_compute_instance_group" "instance_group" {
   provider = google
   count    = var.create_instance_group ? local.instance_group_count : 0
-  name     = var.instance_group_name
-  project  = var.project_id
-  zone     = var.zone != "" ? var.zone : element(data.google_compute_zones.available.names, count.index)
+  name     = var.instance_group_name 
+  project = var.project_id
+  zone    = var.zone != "" ? var.zone : element(data.google_compute_zones.available.names, count.index)
   instances = matchkeys(
     google_compute_instance_from_template.compute_instance.*.self_link,
     google_compute_instance_from_template.compute_instance.*.zone,
@@ -100,10 +96,6 @@ resource "google_compute_instance_group" "instance_group" {
       name = named_port.value.name
       port = named_port.value.port
     }
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 }
 

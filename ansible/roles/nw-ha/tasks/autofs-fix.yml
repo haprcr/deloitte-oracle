@@ -17,7 +17,6 @@
 - name: cleanup stopped and failed crm resources
   shell: |
     crm resource cleanup
-  when: ansible_os_family == "Suse"
 
 - name: wait for crm and autofs to become stable
   wait_for:

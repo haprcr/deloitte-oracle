@@ -57,7 +57,7 @@
       crm configure primitive ascs_fs_{{ sap_nw_sid }} Filesystem
       device={{ sap_nw_nfs_src }}/ASCS{{ sap_nw_ascs_instance_number }}
       directory=/usr/sap/{{ sap_nw_sid }}/ASCS{{ sap_nw_ascs_instance_number }} fstype="nfs"
-      options="rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+      options="rw,hard,rsize=65536,wsize=65536,vers=4.1,tcp"
       op start timeout=60s interval=0
       op stop timeout=60s interval=0
       op monitor interval=20s timeout=40s
@@ -73,7 +73,7 @@
       crm configure primitive ascs_fs_{{ sap_nw_sid }} Filesystem
       device={{ sap_nw_nfs_src }}/SCS{{ sap_nw_ascs_instance_number }}
       directory=/usr/sap/{{ sap_nw_sid }}/SCS{{ sap_nw_ascs_instance_number }} fstype="nfs"
-      options="rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+      options="rw,hard,rsize=65536,wsize=65536,vers=4.1,tcp"
       op start timeout=60s interval=0
       op stop timeout=60s interval=0
       op monitor interval=20s timeout=40s
@@ -89,7 +89,7 @@
       crm configure primitive ers_fs_{{ sap_nw_sid }} Filesystem
       device={{ sap_nw_nfs_src }}/ERS{{ sap_nw_ers_instance_number }}
       directory=/usr/sap/{{ sap_nw_sid }}/ERS{{ sap_nw_ers_instance_number }} fstype="nfs"
-      options="rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+      options="rw,hard,rsize=65536,wsize=65536,vers=4.1,tcp"
       op start timeout=60s interval=0
       op stop timeout=60s interval=0
       op monitor interval=20s timeout=40s
@@ -117,65 +117,3 @@
     when: sap_use_lb
   when:
     ansible_os_family == 'Suse'
-
-- block:
-  - name: create ipaddr2 resource
-    command: >-
-      pcs resource create rsc_vip_int-{{ sap_vip_purpose }} IPaddr2
-      nic=ens4 ip={{ sap_vip }} cidr_netmask=32 op monitor interval=3600s timeout=60s
-    when: sap_system_type == "hana"
-    register: pcs_command_status
-    changed_when: pcs_command_status.rc == 0
-    failed_when: pcs_command_status.rc != 0 and 'already exists' not in pcs_command_status.stderr
-
-  - name: create healthcheck service
-    command: |
-      pcs resource create rsc_healthcheck-{{ sap_vip_purpose }} service:haproxy
-      op monitor interval=10s timeout=20s
-    when: sap_system_type == "hana"
-    register: pcs_command_status
-    changed_when: pcs_command_status.rc == 0
-    failed_when: pcs_command_status.rc != 0 and 'already exists' not in pcs_command_status.stderr
-
-  - name: create ipaddr2 resource
-    command: >-
-      pcs resource create rsc_vip_int-{{ sap_vip_purpose }} IPaddr2
-      nic=ens4 ip={{ sap_vip }} cidr_netmask=32 op monitor interval=3600s timeout=60s --group g-{{ sap_vip_purpose }}
-    when: sap_system_type == "nw"
-    register: pcs_command_status
-    changed_when: pcs_command_status.rc == 0
-    failed_when: pcs_command_status.rc != 0 and 'already exists' not in pcs_command_status.stderr
-
-  - name: create healthcheck service
-    command: |
-      pcs resource create rsc_healthcheck-{{ sap_vip_purpose }} service:haproxy@{{ sap_nw_sid|lower }}{{ sap_vip_purpose }}
-      op monitor interval=10s timeout=20s --group g-{{ sap_vip_purpose }}
-    when: sap_system_type == "nw"
-    register: pcs_command_status
-    changed_when: pcs_command_status.rc == 0
-    failed_when: pcs_command_status.rc != 0 and 'already exists' not in pcs_command_status.stderr
-
-  - name: create ascs filesystem
-    command: |
-      pcs resource create rsc_fs-{{ sap_vip_purpose }} Filesystem
-      device="{{ sap_nw_ascs_nfs_mount_src }}" directory="{{ sap_nw_ascs_nfs_mount_dest }}"
-      fstype=nfs force_unmount=safe --group g-{{ sap_vip_purpose }} op start interval=0
-      timeout=60 op stop interval=0 timeout=120 op monitor interval=200 timeout=40
-    when: ( sap_use_lb |bool) and ( sap_system_type == "nw" )
-    register: pcs_command_status
-    changed_when: pcs_command_status.rc == 0
-    failed_when: pcs_command_status.rc != 0 and 'already exist' not in pcs_command_status.stderr
-
-  - name: create ers filesystem
-    command: |
-      pcs resource create rsc_fs-{{ sap_vip_purpose }} Filesystem
-      device="{{ sap_nw_ers_nfs_mount_src }}" directory="{{ sap_nw_ers_nfs_mount_dest }}"
-      fstype=nfs force_unmount=safe --group g-{{ sap_vip_purpose }} op start interval=0
-      timeout=60 op stop interval=0 timeout=120 op monitor interval=200 timeout=40
-    when: not ( sap_use_lb |bool) and ( sap_system_type == "nw" )
-    register: pcs_command_status
-    changed_when: pcs_command_status.rc == 0
-    failed_when: pcs_command_status.rc != 0 and 'already exist' not in pcs_command_status.stderr
-
-  when:
-    ansible_os_family == 'RedHat'

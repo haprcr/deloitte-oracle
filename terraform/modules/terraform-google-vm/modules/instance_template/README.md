@@ -32,8 +32,8 @@ See the [simple](../../examples/instance_template/simple) for a usage example.
 | region | Region where the instance template should be created. | string | `"null"` | no |
 | service\_account | Service account to attach to the instance. See https://www.terraform.io/docs/providers/google/r/compute_instance_template.html#service_account. | object | n/a | yes |
 | shielded\_instance\_config | Not used unless enable_shielded_vm is true. Shielded VM configuration for the instance. | object | `<map>` | no |
-| source\_image | Source disk image. If no source_image is specified, defaults to the latest public CentOS image. | string | `""` | no |
-| source\_image\_family | Source image family. If no source_image is specified, defaults to the latest public CentOS image. | string | `"centos-7"` | no |
+| source\_image | Source disk image. If neither source_image nor source_image_family is specified, defaults to the latest public CentOS image. | string | `""` | no |
+| source\_image\_family | Source image family. If neither source_image nor source_image_family is specified, defaults to the latest public CentOS image. | string | `"centos-7"` | no |
 | source\_image\_project | Project where the source image comes from. The default project contains images that support Shielded VMs if desired | string | `"gce-uefi-images"` | no |
 | startup\_script | User startup script to run when instances spin up | string | `""` | no |
 | subnetwork | The name of the subnetwork to attach this interface to. The subnetwork must exist in the same region this instance will be created in. Either network or subnetwork must be provided. | string | `""` | no |

@@ -24,8 +24,8 @@
 
 - name: check mounts
   command: mount
-  # args:
-  #   warn: false
+  args:
+    warn: false
   register: nfs_client_mount_command
   changed_when: false
   when: nfs_client_source | length != 0
@@ -50,7 +50,7 @@
       fstype: nfs
       path: /mnt
       src: '{{ nfs_client_source }}'
-      opts: 'rw,rsize=65536,wsize=65536,hard,vers=3,tcp,intr,timeo=18,retrans=200'
+      opts: 'rw,rsize=65536,wsize=65536,hard,vers=4.1,tcp,intr,timeo=18,retrans=200'
       state: mounted
   - name: make directories on nfs share
     file:

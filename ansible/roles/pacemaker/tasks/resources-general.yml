@@ -17,7 +17,6 @@
       crm configure get_property stonith-enabled
     register: crm_command_status_stonith
     changed_when: false
-
   - name: configure stonith
     command: >-
       crm configure property stonith-enabled=true
@@ -27,7 +26,6 @@
       crm configure get_property stonith-timeout
     register: crm_command_status_stonith_time
     changed_when: false
-
   - name: configure stonith timeout
     command: >-
       crm configure property stonith-timeout=300s
@@ -54,7 +52,6 @@
     register: crm_command_status
     changed_when: false
     failed_when: false
-
   - name: configure timeout
     command: >-
       crm configure op_defaults timeout=600
@@ -62,20 +59,3 @@
       'timeout=600' not in crm_command_status.stdout
   when:
     ansible_os_family == 'Suse'
-
-- block:
-  - command: pcs resource defaults
-    register: pcs_command_status
-    changed_when: false
-
-  - name: configure resource-stickiness
-    command: pcs resource defaults update resource-stickiness=1000
-    when: |
-      'resource-stickiness=1000' not in pcs_command_status.stdout
-      
-  - name: configure migration-threshold
-    command: pcs resource defaults update migration-threshold=5000
-    when: |
-      'migration-threshold=5000' not in pcs_command_status.stdout
-  when:
-    ansible_os_family == 'RedHat'

@@ -63,8 +63,13 @@ variable "region" {
 # disk
 #######
 variable "source_image" {
-  description = "Source disk image. If no source_image is specified, defaults to the latest public CentOS image."
+  description = "Source disk image. If neither source_image nor source_image_family is specified, defaults to the latest public CentOS image."
   default     = ""
+}
+
+variable "source_image_family" {
+  description = "Source image family. If neither source_image nor source_image_family is specified, defaults to the latest public CentOS image."
+  default     = "centos-7"
 }
 
 variable "source_image_project" {
@@ -181,8 +186,4 @@ variable "access_config" {
     network_tier = string
   }))
   default = []
-}
-
-variable "pd_kms_key" {
-  description = "Customer managed encryption key to use in persistent disks. If none provided, a Google managed key will be used.."
 }

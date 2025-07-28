@@ -43,8 +43,8 @@ variable "instance_type" {
   default     = "n1-standard-8"
 }
 
-variable "source_image_name" {
-  description = "Source image name."
+variable "source_image_family" {
+  description = "Source image family."
 }
 
 variable "source_image_project" {
@@ -101,7 +101,7 @@ variable "subnetwork_project" {
 }
 
 variable "network_tags" {
-  type        = list(string)
+  type        = list
   description = "List of network tags to attach to the instance."
   default     = []
 }
@@ -141,15 +141,6 @@ variable "create_instance_group" {
   default     = true
 }
 
-variable "alias_ip_inp" {
-  default     = null
-  description = "Pas alias input ip address"
-}
-
 variable "instance_group_name" {
-  description = "Instance group name"
-}
-
-variable "labels" {
-  description = "List of labels to attach to the instance."
+description = "Instance group name"
 }

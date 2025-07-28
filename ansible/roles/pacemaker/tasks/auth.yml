@@ -37,13 +37,6 @@
     when: sap_pw_fields | length == 4    # Password has been set before
     no_log: true
 
-  - name: reload firewalld
-    shell: |
-      firewall-cmd --permanent --add-service=high-availability
-      systemctl enable pcsd.service
-      systemctl start pcsd.service
-      firewall-cmd --reload
-
   - name: ensure password authentication is enabled for sshd
     lineinfile:
       path: /etc/ssh/sshd_config

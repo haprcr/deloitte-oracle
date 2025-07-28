@@ -28,10 +28,10 @@
 - name: reload systemd
   command: systemctl daemon-reload
 
-#- name: Install required packages
-#  pip:
-#    name: google-auth-httplib2
-#    state: present
+- name: Install required packages
+  pip:
+    name: google-auth-httplib2
+    state: present
 
 - name: include pacemaker auth tasks
   include_role:
@@ -69,7 +69,7 @@
 - name: include pacemaker resources-stonith tasks
   include_role:
     name: pacemaker
-    tasks_from: resources-stonith-nw-ha
+    tasks_from: resources-stonith
   when: is_primary
 
 - name: include pacemaker resources-vip tasks
