@@ -132,4 +132,7 @@ sap_ora_logvols:
     mountpoint: "/oracle/{{ sap_oracle_sid }}/mirrlogB"
     fstype: xfs
 
-sap_oracle_sid: SPD
+# sap_oracle_sid: SPD
+sap_oracle_sid: TST
+oracle_software_source_bucket: "oracle-deloitte" 
+oracle_rdbms_zip_file: "51053828.zip"

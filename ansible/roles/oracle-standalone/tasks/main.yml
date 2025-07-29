@@ -65,72 +65,76 @@
 #   [harshapriyacr@ankitol95 ~]$ cat /sys/devices/system/node/online
 # 0
 
-# - name: Ensure Oracle recommended kernel parameters are set
-#   ansible.builtin.sysctl:
-#     name: "{{ item.name }}"
-#     value: "{{ item.value }}"
-#     state: present
-#     sysctl_file: /etc/sysctl.d/99-oracle.conf # Using a dedicated file for Oracle settings
-#     reload: yes
-#   loop:
-#     - { name: 'kernel.shmmax', value: '{{ (ansible_memtotal_mb * 1024 * 1024 * 0.5) | int }}' } # Roughly 50% of RAM
-#     - { name: 'kernel.shmall', value: '{{ (ansible_memtotal_mb * 1024 * 1024 * 0.9) | int / 4096 }}' } # Roughly 90% of RAM in pages
-#     - { name: 'kernel.sem', value: '250 32000 100 128' }
-#     - { name: 'fs.file-max', value: '6815744' }
-#     - { name: 'net.ipv4.ip_local_port_range', value: '9000 65500' }
-#     - { name: 'net.core.rmem_default', value: '262144' }
-#     - { name: 'net.core.rmem_max', value: '4194304' }
-#     - { name: 'net.core.wmem_default', value: '262144' }
-#     - { name: 'net.core.wmem_max', value: '1048576' }
-#   # The oracle-database-preinstall-19c RPM typically sets many of these.
-#   # This task ensures they are explicitly present or updated.
-#   tags: oracle_preinstall, kernel_params
+- name: Create Oracle base directory /oracle if it does not exist
+  file:
+    path: /oracle
+    state: directory
+    # owner: oracle
+    # group: oinstall
+    mode: 0775
+  # become: yes
 
-# - name: Ensure Oracle user soft and hard limits are set
-#   ansible.builtin.blockinfile:
-#     path: /etc/security/limits.d/oracle-database-preinstall-19c.conf
-#     block: |
-#       oracle   soft   nofile    1024
-#       oracle   hard   nofile    65536
-#       oracle   soft   nproc     16384
-#       oracle   hard   nproc     16384
-#       oracle   soft   stack     10240
-#       oracle   hard   stack     32768
-#       oracle   soft   memlock   {{ (ansible_memtotal_mb * 1024 * 0.9) | int }} # Roughly 90% of RAM in KB
-#       oracle   hard   memlock   {{ (ansible_memtotal_mb * 1024 * 0.9) | int }} # Roughly 90% of RAM in KB
-#     create: yes
-#     backup: yes
-#     insertafter: EOF # Add at the end of the file if it exists, or create it
-#   # The oracle-database-preinstall-19c RPM typically creates and manages this file.
-#   # This task ensures the common Oracle limits are explicitly set or updated.
-#   tags: oracle_preinstall, limits
+- name: Verify ownership and permissions of /oracle
+  command: ls -ld /oracle
+  register: oracle_dir_perms
+  changed_when: false
 
-# - name: Ensure Oracle user and primary group (oinstall) exist
-#   ansible.builtin.user:
-#     name: '{{ oracle_user }}'
+- name: Create SID directory /oracle/{{ sap_oracle_sid }} for binary installation
+  file:
+    path: "/oracle/{{ sap_oracle_sid }}"
+    state: directory
+    # owner: oracle
+    # group: oinstall
+    mode: 0775
+  # become: yes
+
+- name: Verify ownership and permissions of /oracle/{{ sap_oracle_sid }}
+  command: "ls -ld /oracle/{{ sap_oracle_sid }}"
+  register: sid_dir_perms
+  changed_when: false
+
+- name: Create Oracle stage directory /oracle/stage
+  file:
+    path: /oracle/stage
+    state: directory
+    # owner: oracle
+    # group: oinstall
+    mode: 0775
+  # become: yes
+
+# - name: Download Oracle RDBMS software from GCS
+#   command: "gsutil cp {{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }} /oracle/stage/{{ oracle_rdbms_zip_file }}"
+#   args:
+#     creates: "/oracle/stage/{{ oracle_rdbms_zip_file }}" # This prevents command from running if file already exists
+#   become: yes # gsutil might require root or specific user with GCS access configured
+#   # Consider adding a 'when' condition if gsutil is not guaranteed to be installed,
+#   # or add a pre-check/installation task for gsutil.
+#   tags: oracle_software_download
+
+
+- name: Download Oracle RDBMS software from GCS
+  command: >-
+    gsutil -m rsync -r
+    gs://{{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }}/ /oracle/stage/{{ oracle_rdbms_zip_file }}/
+  # with_items: "{{ sap_product_vars[sap_product_and_version].install_files }}"
+  # environment:
+  #   CLOUDSDK_PYTHON: '{{ cloudsdk_python_export_path }}'
+  # run_once: '{{ sap_nw_install_files_dest_is_nfs | bool }}'
+
+
+# - name: Change ownership of downloaded Oracle RDBMS software to oracle user
+#   file:
+#     path: "/oracle/stage/{{ oracle_rdbms_zip_file }}"
+#     owner: oracle
 #     group: oinstall
-#     groups: dba, oper # Add common Oracle groups
-#     comment: "Oracle Software Owner"
-#     shell: /bin/bash # Or /bin/ksh if preferred
-#     home: /home/oracle # Or /u01/app/oracle if standard
-#     state: present
-#   tags: oracle_preinstall, users_groups
+#   # become: yes
 
-
-# - name: ensure cluster user password is set
-#   user:
-#       name: '{{ sap_cluster_user }}'
-#       password: '{{ sap_cluster_user_password | password_hash("sha512") }}'
-#   when: sap_pw_fields | length == 1    # No password has been set
-#   no_log: true
-# - name: Ensure Oracle secondary groups exist (if not created by user module)
-#   ansible.builtin.group:
-#     name: "{{ item }}"
-#     state: present
-#   loop:
-#     - dba
-#     - oper
-#     - backupdba # Common Oracle groups
-#     - dgdba
-#     - kmdba
-#   tags: oracle_preinstall, users_groups
+# - name: Unzip ORA19c RDBMS in location /oracle/stage/ORA19_RDBMS
+#   unarchive:
+#     src: "/oracle/stage/{{ oracle_rdbms_zip_file }}"
+#     dest: "/oracle/stage/ORA19_RDBMS"
+#     remote_src: yes # Indicates the source file is on the remote host
+#     owner: oracle
+#     group: oinstall
+#     creates: "/oracle/stage/ORA19_RDBMS/runInstaller" # A common file to check if unzip was successful
+#   become: yes # Unzipping might require root if files are created with specific permissions
