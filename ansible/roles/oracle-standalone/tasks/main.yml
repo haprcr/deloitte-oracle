@@ -116,6 +116,8 @@
   command: "gsutil cp {{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }} /oracle/stage/{{ oracle_rdbms_zip_file }}"
   args:
     creates: "/oracle/stage/{{ oracle_rdbms_zip_file }}" # This prevents command from running if file already exists
+  # environment:
+  #   gcloud_install_dir: /usr/local
   # become: yes # gsutil might require root or specific user with GCS access configured
   # Consider adding a 'when' condition if gsutil is not guaranteed to be installed,
   # or add a pre-check/installation task for gsutil.
@@ -124,9 +126,19 @@
   #   gsutil -m rsync -r
   #   gs://{{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }}/ /oracle/stage/{{ oracle_rdbms_zip_file }}/
   # with_items: "{{ sap_product_vars[sap_product_and_version].install_files }}"
-  # environment:
-  #   CLOUDSDK_PYTHON: '{{ cloudsdk_python_export_path }}'
+  environment:
+    CLOUDSDK_PYTHON: '{{ cloudsdk_python_export_path }}'
   # run_once: '{{ sap_nw_install_files_dest_is_nfs | bool }}'
+
+# - name: Download install files
+#   shell: |
+#     gsutil -m rsync -x '^(?!{{ item }}).*' -r gs://{{ sap_hana_install_files_bucket_and_prefix }} {{ sap_hostagent_rpm_remote_path }}
+#   args:
+#     creates: "{{ sap_hostagent_rpm_remote_path }}/{{ item }}"
+#   environment:
+#     CLOUDSDK_PYTHON: "{{ cloudsdk_python_export_path }}"
+#   with_items: "{{ sap_product_vars[sap_product_and_version].values() | list }}"
+
 
 
 # - name: Change ownership of downloaded Oracle RDBMS software to oracle user
@@ -145,3 +157,6 @@
 #     group: oinstall
 #     creates: "/oracle/stage/ORA19_RDBMS/runInstaller" # A common file to check if unzip was successful
 #   become: yes # Unzipping might require root if files are created with specific permissions
+
+
+gsutil -m rsync -r gs://oracle-deloitte/51053828.zip/ /oracle/stage/51053828.zip/
