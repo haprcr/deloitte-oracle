@@ -159,4 +159,4 @@
 #   become: yes # Unzipping might require root if files are created with specific permissions
 
 
-gsutil -m rsync -r gs://oracle-deloitte/51053828.zip/ /oracle/stage/51053828.zip/
+# gsutil -m rsync -r gs://oracle-deloitte/51053828.zip/ /oracle/stage/51053828.zip/
