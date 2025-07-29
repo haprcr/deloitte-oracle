@@ -113,9 +113,13 @@
 
 
 - name: Download Oracle RDBMS software from GCS
-  command: gsutil cp {{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }} /oracle/stage/{{ oracle_rdbms_zip_file }}"
+  command: "gsutil cp {{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }} /oracle/stage/{{ oracle_rdbms_zip_file }}"
   args:
-    creates: "/oracle/stage/{{ oracle_rdbms_zip_file }}" 
+    creates: "/oracle/stage/{{ oracle_rdbms_zip_file }}" # This prevents command from running if file already exists
+  # become: yes # gsutil might require root or specific user with GCS access configured
+  # Consider adding a 'when' condition if gsutil is not guaranteed to be installed,
+  # or add a pre-check/installation task for gsutil.
+  # tags: oracle_software_download
   # command: >-
   #   gsutil -m rsync -r
   #   gs://{{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }}/ /oracle/stage/{{ oracle_rdbms_zip_file }}/
