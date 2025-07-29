@@ -22,4 +22,4 @@
 - import_tasks: os.yml
 
 - import_tasks: gcp.yml
-  when: ansible_os_family == 'Suse'
+  # when: ansible_os_family == 'Suse'
