@@ -76,3 +76,8 @@ package_list:
   - libnsl2
   - gcc
   - unixODBC
+  - python3-pip
+  - jq
+  - unzip
+  - uuid 
+  - rsync 

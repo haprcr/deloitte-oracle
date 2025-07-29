@@ -62,6 +62,10 @@ package_list:
   - librdmacm
   - libvirt-libs
   - libnsl2
-  # - libnsl2-devel
   - gcc
   - unixODBC
+  - python3-pip
+  - jq
+  - unzip
+  - uuid 
+  - rsync 
