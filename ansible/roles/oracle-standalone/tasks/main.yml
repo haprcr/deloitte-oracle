@@ -49,7 +49,7 @@
   become: yes # Use sudo to write to the sysfs file
   when: "'[never]' not in thp_status.stdout" # Only run if THP is not already disabled
 
-- name: Verify Transparent Hugepages are disabled (re-check after disabling attempt)
+- name: Verify Transparent Hugepages are disabled
   shell: "cat /sys/kernel/mm/transparent_hugepage/enabled"
   register: thp_status
   changed_when: false

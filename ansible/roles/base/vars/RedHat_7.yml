@@ -52,3 +52,16 @@ package_list:
   - ksh
   - pam.i686
   - libstdc++.i686
+  - oracle-database-preinstall-19c
+  - libxcrypt-compat
+  - compat-openssl11
+  - fontconfig
+  - libasan
+  - liblsan
+  - libibverbs
+  - librdmacm
+  - libvirt-libs
+  - libnsl2
+  - libnsl2-devel
+  - gcc
+  - unixODBC

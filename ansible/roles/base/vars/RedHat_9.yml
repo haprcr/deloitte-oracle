@@ -66,3 +66,17 @@ package_list:
   - libXrender.i686  
   - libXfixes.i686
   - xz-libs.i686
+  - oracle-database-preinstall-19c
+  - libxcrypt-compat
+  - compat-openssl11
+  - fontconfig
+  - libasan
+  - liblsan
+  - libibverbs
+  - librdmacm
+  - libvirt-libs
+  - libnsl2
+  - libnsl2-devel
+  - gcc
+  - unixODBC
+
