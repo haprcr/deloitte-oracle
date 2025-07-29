@@ -113,7 +113,7 @@
 
 
 - name: Download Oracle RDBMS software from GCS
-  command: "gsutil cp {{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }} /oracle/stage/{{ oracle_rdbms_zip_file }}"
+  command: "gsutil cp gs://{{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }} /oracle/stage/{{ oracle_rdbms_zip_file }}"
   args:
     creates: "/oracle/stage/{{ oracle_rdbms_zip_file }}" # This prevents command from running if file already exists
   # environment:
