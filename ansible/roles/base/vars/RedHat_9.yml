@@ -76,7 +76,6 @@ package_list:
   - librdmacm
   - libvirt-libs
   - libnsl2
-  - libnsl2-devel
   - gcc
   - unixODBC
 
