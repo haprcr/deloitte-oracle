@@ -23,6 +23,15 @@
 - name: updating alternatives
   command: >-
     update-alternatives --install /usr/bin/{{ item.item }} {{ item.item }}
-    {{ gcloud_install_dir }}/google-cloud-sdk/bin/{{ item.item }} 1 --force
+    {{ gcloud_install_dir }}/google-cloud-sdk/bin/{{ item.item }} 1
   loop: '{{ stat_google_cloud_sdk.results }}'
   when: not item.stat.exists
+
+
+# - name: updating alternatives
+#   ansible.builtin.command: >-
+#     update-alternatives --install /usr/bin/{{ item.item }} {{ item.item }}
+#     {{ gcloud_install_dir }}/google-cloud-sdk/bin/{{ item.item }} 1
+#   loop: '{{ stat_google_cloud_sdk.results }}'
+#   when: not item.stat.exists
+#   become: yes # Ensure this task runs with sudo privileges if needed
