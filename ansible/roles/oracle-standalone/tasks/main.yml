@@ -126,8 +126,8 @@
   #   gsutil -m rsync -r
   #   gs://{{ oracle_software_source_bucket }}/{{ oracle_rdbms_zip_file }}/ /oracle/stage/{{ oracle_rdbms_zip_file }}/
   # with_items: "{{ sap_product_vars[sap_product_and_version].install_files }}"
-  environment:
-    CLOUDSDK_PYTHON: '{{ cloudsdk_python_export_path }}'
+  # environment:
+  #   CLOUDSDK_PYTHON: '{{ cloudsdk_python_export_path }}'
   # run_once: '{{ sap_nw_install_files_dest_is_nfs | bool }}'
 
 # - name: Download install files
